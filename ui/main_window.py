@@ -34,13 +34,18 @@ class FeishuBitableApp(QMainWindow):
         self.setMinimumSize(1100, 700)
         
         self.current_module = "table"
+        # 当前选中的导航组: "metadata" 或 "building_judge"
+        self.current_nav_group = "metadata"
         self.current_result = None
         self.original_json = ""
         self.oauth_thread = None
         self.get_cookie_thread = None
         
-        self.module_nav = None
-        self.module_stack = None
+        # 导航相关引用
+        self.module_nav = None          # 主导航容器
+        self.sub_nav_container = None   # 二级菜单容器（仅获取元数据组使用）
+        self.nav_buttons = []           # 所有一级导航按钮
+        self.sub_buttons = []           # 所有二级导航按钮
         self.table_panel = None
         self.dashboard_panel = None
         self.workflow_panel = None
@@ -79,7 +84,7 @@ class FeishuBitableApp(QMainWindow):
     def create_left_sidebar(self):
         sidebar = QWidget()
         sidebar.setObjectName("left_sidebar")
-        sidebar.setFixedWidth(220)
+        sidebar.setFixedWidth(240)
         
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -92,9 +97,8 @@ class FeishuBitableApp(QMainWindow):
         logo_layout.setContentsMargins(24, 20, 24, 20)
         logo_layout.setSpacing(8)
         
-        app_title = QLabel("多维表格管理器")
+        app_title = QLabel("飞书多维表格工具")
         app_title.setObjectName("app_title")
-        
         
         logo_layout.addWidget(app_title)
         logo_layout.addStretch()
@@ -103,27 +107,47 @@ class FeishuBitableApp(QMainWindow):
         nav_container = QWidget()
         nav_container.setObjectName("nav_container")
         nav_layout = QVBoxLayout(nav_container)
-        nav_layout.setContentsMargins(16, 0, 16, 16)
+        nav_layout.setContentsMargins(16, 12, 16, 16)
         nav_layout.setSpacing(8)
         
-        nav_label = QLabel("功能模块")
+        nav_label = QLabel("功能导航")
         nav_label.setObjectName("nav_section_label")
         nav_layout.addWidget(nav_label)
         
         self.module_nav = QWidget()
         self.module_nav.setObjectName("module_nav")
-        module_layout = QVBoxLayout(self.module_nav)
-        module_layout.setContentsMargins(0, 0, 0, 0)
-        module_layout.setSpacing(6)
+        main_layout = QVBoxLayout(self.module_nav)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(4)
         
-        self.create_nav_button(module_layout, "📊", "数据表", "table", True)
-        self.create_nav_button(module_layout, "📈", "仪表盘", "dashboard")
-        self.create_nav_button(module_layout, "🔄", "工作流", "workflow")
-        self.create_nav_button(module_layout, "🔐", "高级权限", "permission")
-        self.create_nav_button(module_layout, "📝", "表单", "form")
-        self.create_nav_button(module_layout, "🏗️", "Building机评", "building_judge")
+        # ---------- 一级：获取元数据 ----------
+        self.metadata_group_btn = self._create_group_button("📁  获取元数据", "metadata", is_selected=True)
+        main_layout.addWidget(self.metadata_group_btn)
         
-        module_layout.addStretch()
+        # 二级菜单容器
+        self.sub_nav_container = QWidget()
+        sub_layout = QVBoxLayout(self.sub_nav_container)
+        sub_layout.setContentsMargins(0, 4, 0, 4)
+        sub_layout.setSpacing(2)
+        
+        self._create_sub_button(sub_layout, "📊  数据表", "table", is_selected=True)
+        self._create_sub_button(sub_layout, "📈  仪表盘", "dashboard")
+        self._create_sub_button(sub_layout, "🔄  工作流", "workflow")
+        self._create_sub_button(sub_layout, "🔐  高级权限", "permission")
+        self._create_sub_button(sub_layout, "📝  表单", "form")
+        
+        main_layout.addWidget(self.sub_nav_container)
+        
+        # 分隔
+        spacer = QLabel("")
+        spacer.setFixedHeight(4)
+        main_layout.addWidget(spacer)
+        
+        # ---------- 一级：BASE 机评 ----------
+        self.building_group_btn = self._create_group_button("🏗️  BASE 机评", "building_judge", is_selected=False)
+        main_layout.addWidget(self.building_group_btn)
+        
+        main_layout.addStretch()
         nav_layout.addWidget(self.module_nav)
         
         nav_layout.addStretch()
@@ -148,40 +172,90 @@ class FeishuBitableApp(QMainWindow):
         
         return sidebar
     
-    def create_nav_button(self, parent_layout, icon, text, module_id, is_selected=False):
-        btn = QLabel(f"{icon} {text}")
-        btn.setObjectName("nav_button")
+    def _create_group_button(self, text, group_id, is_selected=False):
+        """创建一级导航组按钮"""
+        btn = QLabel(text)
+        btn.setObjectName("nav_group_button")
+        btn.setProperty("group_id", group_id)
+        btn.setProperty("selected", is_selected)
+        btn.mousePressEvent = lambda e, g=group_id: self._on_group_clicked(g)
+        btn.setCursor(Qt.PointingHandCursor)
+        self.nav_buttons.append(btn)
+        return btn
+    
+    def _create_sub_button(self, parent_layout, text, module_id, is_selected=False):
+        """创建二级子导航按钮"""
+        btn = QLabel(text)
+        btn.setObjectName("nav_sub_button")
         btn.setProperty("module_id", module_id)
         btn.setProperty("selected", is_selected)
         btn.mousePressEvent = lambda e, m=module_id: self.on_module_clicked(m)
         btn.setCursor(Qt.PointingHandCursor)
+        self.sub_buttons.append(btn)
         parent_layout.addWidget(btn)
+        return btn
+    
+    def _on_group_clicked(self, group_id):
+        """点击一级导航组"""
+        self.current_nav_group = group_id
+        
+        # 更新一级按钮的选中状态
+        for btn in self.nav_buttons:
+            is_current = btn.property("group_id") == group_id
+            btn.setProperty("selected", is_current)
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+            btn.update()
+        
+        if group_id == "building_judge":
+            # 直接跳转到 building 机评
+            self.on_module_clicked("building_judge")
+        else:
+            # 点击"获取元数据"：默认进入第一个二级按钮（数据表）
+            # 找到当前已选的子模块，若没有则默认选第一个
+            active_module = "table"
+            for sb in self.sub_buttons:
+                if sb.property("selected"):
+                    active_module = sb.property("module_id")
+                    break
+            self.on_module_clicked(active_module)
     
     def on_module_clicked(self, module_id):
         self.current_module = module_id
         
-        for i in range(self.module_nav.layout().count()):
-            item = self.module_nav.layout().itemAt(i)
-            if item and item.widget():
-                widget = item.widget()
-                if widget.objectName() == "nav_button":
-                    is_current = widget.property("module_id") == module_id
-                    widget.setProperty("selected", is_current)
-                    widget.style().unpolish(widget)
-                    widget.style().polish(widget)
-                    widget.update()
+        # 根据 module_id 决定当前所属的导航组
+        if module_id == "building_judge":
+            self.current_nav_group = "building_judge"
+        else:
+            self.current_nav_group = "metadata"
         
+        # 更新一级按钮的选中态
+        for btn in self.nav_buttons:
+            is_current = btn.property("group_id") == self.current_nav_group
+            btn.setProperty("selected", is_current)
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+            btn.update()
+        
+        # 更新二级按钮的选中态（仅对 metadata 组有效）
+        for sb in self.sub_buttons:
+            is_current = sb.property("module_id") == module_id and self.current_nav_group == "metadata"
+            sb.setProperty("selected", is_current)
+            sb.style().unpolish(sb)
+            sb.style().polish(sb)
+            sb.update()
+        
+        # 更新标题 & 面板
         module_titles = {
             "table": "📊 数据表",
             "dashboard": "📈 仪表盘",
             "workflow": "🔄 工作流",
             "permission": "🔐 高级权限",
             "form": "📝 表单",
-            "building_judge": "🏗️ Building机评"
+            "building_judge": "🏗️ BASE 机评"
         }
         self.module_title.setText(module_titles.get(module_id, "📊 数据表"))
         
-        # 更新模块面板
         panel_index = {
             "table": 0,
             "dashboard": 1,

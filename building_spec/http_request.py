@@ -4,8 +4,8 @@ import os
 import zipfile
 import xml.etree.ElementTree as ET
 
-JUDGE_API_KEY = "FeMs0qSl1vqstjQ2NBSNnObknvV751Y5MdzsdjUkGdU"
-API_URL = "https://sszy6ucc.fn-boe.bytedance.net/v1/judge"
+JUDGE_API_KEY = ""  # 请在 Building 机评界面配置，或在 user_config.json 中设置
+API_URL = ""  # 请配置 JUDGE API 地址
 
 def read_cases_from_excel(excel_path):
     """从 Excel 文件读取测试用例（使用 zip 和 xml 解析）"""

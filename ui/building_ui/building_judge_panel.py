@@ -17,6 +17,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
 from .batch_judge_dialog import BatchJudgeDialog
+from .doc_to_bitable_dialog import DocToBitableDialog
 from .dashboard_judge_panel import DashboardJudgePanel
 from .workflow_judge_panel import WorkflowJudgePanel
 from .block_judge_panel import BlockJudgePanel
@@ -507,6 +508,28 @@ class BuildingJudgePanel(QWidget):
         
         layout.addStretch()
         
+        self.doc_to_bitable_btn = QPushButton("📄云文档转BASE")
+        self.doc_to_bitable_btn.clicked.connect(self.on_doc_to_bitable)
+        self.doc_to_bitable_btn.setMinimumHeight(40)
+        self.doc_to_bitable_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #10b981, stop:1 #059669);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 24px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #34d399, stop:1 #10b981);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #059669, stop:1 #047857);
+            }
+        """)
+        layout.addWidget(self.doc_to_bitable_btn)
+
         self.batch_call_btn = QPushButton("🚀批量调用")
         self.batch_call_btn.clicked.connect(self.on_batch_call)
         self.batch_call_btn.setMinimumHeight(40)
@@ -591,6 +614,11 @@ class BuildingJudgePanel(QWidget):
     def on_batch_call(self):
         """打开批量调用对话框"""
         dialog = BatchJudgeDialog(self)
+        dialog.exec_()
+
+    def on_doc_to_bitable(self):
+        """打开云文档转 BASE 对话框"""
+        dialog = DocToBitableDialog(self)
         dialog.exec_()
     
     def append_result(self, title, data):

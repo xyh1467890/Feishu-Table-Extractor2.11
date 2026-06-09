@@ -63,6 +63,47 @@ QLabel#nav_button[selected="true"] {
     font-weight: 700;
 }
 
+QLabel#nav_group_button {
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #f1f5f9;
+}
+
+QLabel#nav_group_button:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+QLabel#nav_group_button[selected="true"] {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #3b82f6, stop: 1 #2563eb);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+QLabel#nav_sub_button {
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px 10px 32px;
+    border-radius: 8px;
+    background: transparent;
+}
+
+QLabel#nav_sub_button:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+QLabel#nav_sub_button[selected="true"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 700;
+    border-left: 3px solid #3b82f6;
+}
+
 QLabel#help_title {
     color: #334155;
     font-size: 14px;
