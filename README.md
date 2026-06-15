@@ -17,6 +17,13 @@
 - **批量测试**: 从 CSV/Excel 批量读取用例，支持并发测试
 - **多轮对话支持**: dashboard、permission、workflow、block 支持多轮对话格式
 
+### 📝 生成标注列（v2.12 新增）
+- **按模式匹配配置表**：支持 小白/Lite、Standard、Pro 三种模式，4 级匹配策略定位模板表
+- **读取字段模板**：从模板表中读取完整的字段配置（字段名、类型、单选/多选的 options）
+- **保留原始字段类型**：单选、多选字段的选项、颜色等配置会完整保留，而非退化为纯文本
+- **一键追加到目标表**：将模板列追加到指定的飞书多维表格，自动跳过已存在的字段
+- **多级回落机制**：复杂字段类型创建失败时自动回落，确保流程稳定
+
 ### 🔐 多种认证方式
 - **Token 方式**（推荐，支持所有模块）
 - **OAuth 2.0 授权**（一键浏览器授权）
@@ -42,10 +49,10 @@ base_mrtadata/
 ├── config/                          # 配置模块
 │   ├── __init__.py
 │   ├── settings.py                  # 配置参数和 API Key 管理
-│   └── user_config.json             # 用户配置（自动生成）
+│   └── user_config.json             # 用户配置（自动生成，不上传）
 ├── api/                             # API 接口模块
 │   ├── __init__.py
-│   ├── feishu_api.py                # 开放 API 接口（数据表）
+│   ├── feishu_api.py                # 开放 API 接口（数据表、字段元数据提取）
 │   ├── feishu_cookie_api.py         # Cookie 方式接口
 │   ├── feishu_dashboard_api.py      # 仪表盘接口
 │   ├── feishu_workflow_api.py       # 工作流接口
@@ -64,7 +71,8 @@ base_mrtadata/
 │   ├── search_widget.py             # 搜索组件
 │   └── building_ui/                 # Building 机评界面
 │       ├── __init__.py
-│       ├── building_judge_panel.py   # 机评主面板
+│       ├── building_judge_panel.py  # 机评主面板（含「生成标注列」按钮）
+│       ├── annotation_column_dialog.py # 生成标注列对话框
 │       ├── batch_judge_dialog.py    # 批量测试对话框（支持所有 agent）
 │       ├── table_judge_panel.py     # 数据表机评面板
 │       ├── dashboard_judge_panel.py # 仪表盘机评面板
@@ -76,15 +84,20 @@ base_mrtadata/
 │   ├── oauth_worker.py              # OAuth 认证线程
 │   ├── cookie_worker.py             # Cookie 获取线程（跨平台支持）
 │   └── fetch_worker.py              # 数据获取线程
-└── building_spec/                   # Building 机评核心逻辑
-    ├── batch_judge.py               # Building 和简单 agent 批量测试逻辑
-    ├── single_judge.py              # Building 和简单 agent 单条测试逻辑
-    ├── table_judge.py               # 数据表机评（单条+批量）
-    ├── dashboard_judge.py           # 仪表盘机评（单条+批量）
-    ├── permission_judge.py          # 高级权限机评（单条+批量）
-    ├── workflow_judge.py            # 工作流机评（单条+批量）
-    ├── block_judge.py               # Block 机评（单条+批量）
-    └── feishu_bitable_import.py     # 结果导入多维表格脚本
+├── building_spec/                   # Building 机评核心逻辑
+│   ├── batch_judge.py               # Building 和简单 agent 批量测试逻辑
+│   ├── single_judge.py              # Building 和简单 agent 单条测试逻辑
+│   ├── annotation_column_spec.py    # 生成标注列：配置表查找+字段模板+property 清理
+│   ├── table_judge.py               # 数据表机评（单条+批量）
+│   ├── dashboard_judge.py           # 仪表盘机评（单条+批量）
+│   ├── permission_judge.py          # 高级权限机评（单条+批量）
+│   ├── workflow_judge.py            # 工作流机评（单条+批量）
+│   ├── block_judge.py               # Block 机评（单条+批量）
+│   └── feishu_bitable_import.py     # 结果导入多维表格脚本
+└── doc_base/                        # 飞书多维表格底层工具
+    ├── __init__.py
+    ├── doc_to_bitable_core.py       # 核心 API 封装（ensure_fields 支持字段类型+配置保留）
+    └── feishu_bitable_import.py     # 数据导入工具
 ```
 
 ## 🚀 快速开始
@@ -115,7 +128,7 @@ python main.py
 - 🔄 工作流
 - 🔐 高级权限
 - 📝 表单
-- 🏗️ Building机评
+- 🏗️ Building机评（内置「生成标注列」按钮）
 
 ### 2. 配置认证
 
@@ -153,6 +166,33 @@ python main.py
 3. 单条测试：直接在界面输入测试用例
 4. 批量测试：点击"批量测试"按钮，选择 CSV/Excel 测试文件
 5. 点击"开始测试"
+
+#### 生成标注列（v2.12 新增）
+**功能**：根据配置表（固定的飞书多维表格）中的字段模板，一键将标注列追加到你的目标多维表格。支持保留字段的原始类型和选项配置。
+
+**操作步骤**：
+1. 打开「Building 机评」面板，点击顶部的「📝 生成标注列」按钮
+2. 选择数据模式：小白/Lite 模式 / Standard 模式 / Pro 模式（对应配置表中的不同模板表）
+3. 输入认证信息：粘贴有效的 User Access Token
+4. 输入目标表链接：粘贴要追加字段的目标飞书多维表格 URL（需包含 `?table=tbl...` 参数）
+5. 点击「🔍 预览将追加的列」：查看从配置表模板中读取到的字段列表（字段名、类型、选项数）
+6. 确认无误后点击「▶ 确认并追加列」：字段将被追加到目标表中，已存在的字段会自动跳过
+7. 查看执行日志：确认新建了多少个字段，跳过了多少个已存在的字段
+
+**配置表匹配逻辑**（4 级策略）：
+1. 精确匹配数据表名称（如 "Pro 模式"）
+2. 包含匹配（名称中包含关键词）
+3. 英文关键字匹配（如 "pro"、"standard"、"lite"）
+4. 兜底：如果配置表只有 1 张表，直接使用
+
+**字段类型保留**：
+- 文本（type=1）
+- 数字（type=2）
+- 单选（type=3）→ 保留选项名称和颜色
+- 多选（type=4）→ 保留选项名称和颜色
+- 人员（type=11）→ 保留关联表 ID
+- 附件（type=17）
+- 其他类型：创建失败时自动回落为文本类型，保证流程不中断
 
 ### 4. 文本对比功能
 
@@ -217,6 +257,15 @@ A: 请在「系统设置 → 隐私与安全性」中允许运行。
 
 **Q: 窗口没有居中显示？**
 A: 请确保使用最新版本，窗口会自动居中显示。
+
+**Q: 生成标注列功能如何使用？**
+A: 在「Building 机评」面板中点击「📝 生成标注列」按钮，选择数据模式（小白/Lite/Standard/Pro），填写 Token 和目标表链接即可。配置表地址是固定的，由程序内部管理。
+
+**Q: 生成标注列时字段类型会不会丢失？**
+A: 不会。程序会读取模板表中字段的完整配置（包括单选/多选的选项、颜色、人员字段的关联表信息等），并在创建新字段时完整保留。如果某些特殊类型创建失败，会自动回落到文本类型，保证流程不中断。
+
+**Q: 目标表中已有的字段会被覆盖吗？**
+A: 不会。程序会先检查目标表中的现有字段，与模板字段名匹配的字段会被自动跳过，只追加目标表中不存在的字段。
 
 ## 🛠️ 技术栈
 
