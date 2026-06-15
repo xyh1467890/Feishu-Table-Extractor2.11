@@ -11,6 +11,14 @@
 - **高级权限**: 提取角色和权限配置
 - **表单**: 提取表单配置和字段信息
 
+### 📄 云文档转BASE
+- **文档解析**: 自动解析飞书云文档中的表格内容
+- **两种模式**: 
+  - 模式 A：在已有 BASE 下新建数据表并写入
+  - 模式 B：将文档表格追加到已有数据表（推荐）
+- **字段映射**: 智能匹配字段名称，支持字段重映射
+- **安全流程**: 先预览解析结果，用户确认后再写入
+
 ### 🏗️ Building 机评功能
 - **支持全量 Agent**: table、dashboard、permission、workflow、block、formula、building
 - **单条测试**: 可视化输入测试用例，快速验证
@@ -71,7 +79,9 @@ base_mrtadata/
 │   ├── search_widget.py             # 搜索组件
 │   └── building_ui/                 # Building 机评界面
 │       ├── __init__.py
-│       ├── building_judge_panel.py  # 机评主面板（含「生成标注列」按钮）
+│       ├── building_judge_panel.py  # 机评主面板（含「云文档转BASE」「生成标注列」按钮）
+│       ├── doc_to_bitable_dialog.py # 云文档转BASE对话框
+│       ├── doc_to_bitable_other_panel.py # 云文档转BASE-其他模式面板
 │       ├── annotation_column_dialog.py # 生成标注列对话框
 │       ├── batch_judge_dialog.py    # 批量测试对话框（支持所有 agent）
 │       ├── table_judge_panel.py     # 数据表机评面板
@@ -87,6 +97,7 @@ base_mrtadata/
 ├── building_spec/                   # Building 机评核心逻辑
 │   ├── batch_judge.py               # Building 和简单 agent 批量测试逻辑
 │   ├── single_judge.py              # Building 和简单 agent 单条测试逻辑
+│   ├── doc_to_bitable_other_spec.py # 云文档转BASE-其他模式业务逻辑
 │   ├── annotation_column_spec.py    # 生成标注列：配置表查找+字段模板+property 清理
 │   ├── table_judge.py               # 数据表机评（单条+批量）
 │   ├── dashboard_judge.py           # 仪表盘机评（单条+批量）
@@ -128,7 +139,7 @@ python main.py
 - 🔄 工作流
 - 🔐 高级权限
 - 📝 表单
-- 🏗️ Building机评（内置「生成标注列」按钮）
+- 🏗️ Building机评（内置「云文档转BASE」「生成标注列」按钮）
 
 ### 2. 配置认证
 
@@ -166,6 +177,27 @@ python main.py
 3. 单条测试：直接在界面输入测试用例
 4. 批量测试：点击"批量测试"按钮，选择 CSV/Excel 测试文件
 5. 点击"开始测试"
+
+#### 云文档转BASE
+**功能**：将飞书云文档中的表格内容转换并写入到多维表格中，支持新建表或追加到已有表。
+
+**操作步骤**：
+1. 打开「Building 机评」面板，点击顶部的「📄 云文档转BASE」按钮
+2. 选择模式：
+   - **Building 模式**：适用于 Building 相关文档解析
+   - **其他模式**：适用于普通文档解析
+3. 输入认证信息：粘贴有效的 User Access Token
+4. 输入飞书云文档链接
+5. 选择输出方式：
+   - **模式 A**: 在已有 BASE 下新建数据表（需要输入新表名称）
+   - **模式 B**: 将数据追加到已有数据表（推荐，需输入目标表链接）
+6. 点击「🔍 预览解析结果」：查看解析后的字段列表和记录数据
+7. 确认无误后点击「▶ 确认并写入」：将数据写入目标表
+
+**字段映射说明**：
+- 程序会自动匹配云文档表格标题与目标表字段名
+- 支持字段名称重映射配置
+- 未匹配的字段会以新字段形式添加
 
 #### 生成标注列（v2.12 新增）
 **功能**：根据配置表（固定的飞书多维表格）中的字段模板，一键将标注列追加到你的目标多维表格。支持保留字段的原始类型和选项配置。
