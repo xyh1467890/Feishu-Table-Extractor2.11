@@ -303,7 +303,7 @@ Building Agent 支持以下评估维度：
 
 ### API 配置信息
 
-- **API URL：** 请配置 JUDGE API 地址（统一使用）
+- **API URL：** `https://sszy6ucc.fn-boe.bytedance.net/v1/judge`（统一使用）
 - **API Key：** 在 UI 界面中配置和保存
 
 ### 响应结果说明

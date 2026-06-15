@@ -66,5 +66,14 @@ config/user_config.json
 *.xls
 *.csv
 
-# Exclude doc_base folder
-doc_base/
+# 用户指定排除的文件夹
+测试用xlsx文件/
+批量跑数据模板/
+
+# 运行日志
+ui/building_ui/log*.txt
+*.log
+
+
+# Exclude doc_base folder（已改为保留，不移除）
+# doc_base/

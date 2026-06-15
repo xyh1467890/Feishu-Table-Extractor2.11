@@ -3,7 +3,7 @@ REDIRECT_PORT = 3000
 REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}"
 
 # Building 机评 API 配置
-JUDGE_API_URL = ""  # 请配置 JUDGE API 地址
+JUDGE_API_URL = "https://sszy6ucc.fn-boe.bytedance.net/v1/judge"
 
 # 配置文件路径
 import os
@@ -30,8 +30,8 @@ def get_config_dir():
             path = os.path.join(os.path.expanduser("~"),
                                 ".config", "飞书多维表格工具")
     else:
-        # 开发模式：放在项目根目录（与 main.py 同级）
-        path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # 开发模式：放在项目根目录下的 config/ 子目录
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
     os.makedirs(path, exist_ok=True)
     return path
 

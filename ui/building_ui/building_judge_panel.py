@@ -18,6 +18,7 @@ from PyQt5.QtGui import QFont
 
 from .batch_judge_dialog import BatchJudgeDialog
 from .doc_to_bitable_dialog import DocToBitableDialog
+from .annotation_column_dialog import AnnotationColumnDialog
 from .dashboard_judge_panel import DashboardJudgePanel
 from .workflow_judge_panel import WorkflowJudgePanel
 from .block_judge_panel import BlockJudgePanel
@@ -508,6 +509,28 @@ class BuildingJudgePanel(QWidget):
         
         layout.addStretch()
         
+        self.annotation_column_btn = QPushButton("📝生成标注列")
+        self.annotation_column_btn.clicked.connect(self.on_generate_annotation_column)
+        self.annotation_column_btn.setMinimumHeight(40)
+        self.annotation_column_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f97316, stop:1 #ea580c);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 24px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #fb923c, stop:1 #f97316);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ea580c, stop:1 #c2410c);
+            }
+        """)
+        layout.addWidget(self.annotation_column_btn)
+
         self.doc_to_bitable_btn = QPushButton("📄云文档转BASE")
         self.doc_to_bitable_btn.clicked.connect(self.on_doc_to_bitable)
         self.doc_to_bitable_btn.setMinimumHeight(40)
@@ -619,6 +642,11 @@ class BuildingJudgePanel(QWidget):
     def on_doc_to_bitable(self):
         """打开云文档转 BASE 对话框"""
         dialog = DocToBitableDialog(self)
+        dialog.exec_()
+
+    def on_generate_annotation_column(self):
+        """打开生成标注列对话框"""
+        dialog = AnnotationColumnDialog(self)
         dialog.exec_()
     
     def append_result(self, title, data):
